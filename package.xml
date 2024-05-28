@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>my_human_detection_package</name>
+  <version>0.0.1</version>
+  <description>Human detection using Velodyne LiDAR and ROS2</description>
+  <maintainer email="kelvin926@korea.ac.kr">Hyunseo</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>pcl_conversions</depend>
+  <depend>pcl_ros</depend>
+  <depend>PCL</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
+
