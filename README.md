@@ -12,6 +12,8 @@ colcon build
 
 ros2 launch human_detection_package velodyne_launch.py
 
+rviz2 -> frame_id : velodyne, ADD Point cloud2 / marker_array
+
 ## Important
 velodyne_launch.py - 23 lines
 'calibration': '/home/hyunseo/human_detection_package/config/VLP-16db.yaml', -> your absolute path
