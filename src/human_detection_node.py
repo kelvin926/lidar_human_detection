@@ -21,13 +21,15 @@ class HumanDetectionNode(Node):
         self.subscription  # prevent unused variable warning
 
     def pointcloud_callback(self, msg):
-        self.get_logger().info(f'Received PointCloud2 data with {msg.width * msg.height} points')
+        # self.get_logger().info(f'Received PointCloud2 data with {msg.width * msg.height} points')
 
         points = []
         for i, data in enumerate(pc2.read_points(msg, skip_nans=True)):
-            points.append([data[0], data[1], data[2]])
-            if i < 10:
-                self.get_logger().info(f'Point {i}: {data}')
+            distance = np.sqrt(data[0]**2 + data[1]**2 + data[2]**2)
+            if distance <= 4.0:  # 4m 이상의 포인트 제외
+                points.append([data[0], data[1], data[2]])
+                # if i < 10:
+                    # self.get_logger().info(f'Point {i}: {data}')
 
         points = np.array(points)
 
@@ -36,13 +38,13 @@ class HumanDetectionNode(Node):
         labels = clustering.labels_
 
         unique_labels = set(labels)
-        self.get_logger().info(f'Found {len(unique_labels) - 1} clusters')
+        self.get_logger().info(f'{len(unique_labels) - 1} 개의 클러스터를 감지했습니다.')
 
         markers = MarkerArray()
         id_counter = 0
 
         for label in unique_labels:
-            if label == -1:  # 노이즈는 무시
+            if label == -1:  # 노이즈 무시
                 continue
             class_member_mask = (labels == label)
             xyz = points[class_member_mask]
@@ -121,8 +123,8 @@ class HumanDetectionNode(Node):
         depth = y_max - y_min
         height = z_max - z_min
 
-        # 사람의 다양한 자세와 라이다의 위치를 감안한 크기 조건 설정
-        if 0.2 < width < 1.0 and 0.2 < depth < 1.0 and 0.5 < height < 2.5:
+        # 사람 크기 조건
+        if 0.2 < width < 0.5 and 0.2 < depth < 0.5 and 0.5 < height < 2.0:
             return True
         return False
 
@@ -135,4 +137,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
