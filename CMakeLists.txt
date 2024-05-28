@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(my_human_detection_package)
+project(human_detection_package)
 
 # Add the following lines to set the policy CMP0074
 if(POLICY CMP0074)
