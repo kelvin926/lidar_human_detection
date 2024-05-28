@@ -32,7 +32,7 @@ class HumanDetectionNode(Node):
         points = np.array(points)
 
         # 클러스터링
-        clustering = DBSCAN(eps=0.3, min_samples=5).fit(points)
+        clustering = DBSCAN(eps=0.5, min_samples=10).fit(points)
         labels = clustering.labels_
 
         unique_labels = set(labels)
@@ -102,7 +102,7 @@ class HumanDetectionNode(Node):
                 text_marker.pose.orientation.y = 0.0
                 text_marker.pose.orientation.z = 0.0
                 text_marker.pose.orientation.w = 1.0
-                text_marker.scale.z = 0.5  # 텍스트 크기
+                text_marker.scale.z = 0.05  # 텍스트 크기
                 text_marker.color.a = 1.0  # Transparency
                 text_marker.color.r = 1.0
                 text_marker.color.g = 1.0
