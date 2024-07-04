@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import PointCloud2
 from visualization_msgs.msg import Marker, MarkerArray
+from geometry_msgs.msg import Point
 import sensor_msgs_py.point_cloud2 as pc2
 import numpy as np
 from sklearn.cluster import DBSCAN
@@ -26,7 +27,7 @@ class HumanDetectionNode(Node):
         points = []
         for i, data in enumerate(pc2.read_points(msg, skip_nans=True)):
             distance = np.sqrt(data[0]**2 + data[1]**2 + data[2]**2)  # 거리
-            if distance <= 4.0: # 4m 이내의 포인트만 사용
+            if distance <= 5.0: # 10m 이내의 포인트만 사용
                 points.append([data[0], data[1], data[2]])
 
         points = np.array(points)
@@ -38,8 +39,8 @@ class HumanDetectionNode(Node):
         unique_labels = set(labels)
         self.get_logger().info(f'Found {len(unique_labels) - 1} clusters')
 
-        best_human = None
-        best_score = float('-inf')
+        best_humans = [None, None]
+        best_scores = [-1, -1]
 
         for label in unique_labels:
             if label == -1:  # 노이즈는 무시
@@ -57,84 +58,95 @@ class HumanDetectionNode(Node):
             # 사람의 크기와 형태에 맞는 클러스터 필터링
             if self.is_human(x_min, x_max, y_min, y_max, z_min, z_max):
                 score = self.evaluate_cluster(xyz)  # 클러스터의 적합성 평가
-                if score > best_score:
-                    best_score = score
-                    best_human = (x_min, x_max, y_min, y_max, z_min, z_max, xyz)
+                if score > best_scores[0]:
+                    best_scores[1] = best_scores[0]
+                    best_humans[1] = best_humans[0]
+                    best_scores[0] = score
+                    best_humans[0] = (x_min, x_max, y_min, y_max, z_min, z_max, xyz)
+                elif score > best_scores[1]:
+                    best_scores[1] = score
+                    best_humans[1] = (x_min, x_max, y_min, y_max, z_min, z_max, xyz)
 
         markers = MarkerArray()
-        if best_human is not None:
-            x_min, x_max, y_min, y_max, z_min, z_max, xyz = best_human
-            id_counter = 0
+        id_counter = 0
 
-            # 테두리만 있는 박스
-            marker = Marker()
-            marker.header.frame_id = "velodyne"
-            marker.header.stamp = self.get_clock().now().to_msg()
-            marker.ns = "human_detection"
-            marker.id = id_counter
-            marker.type = Marker.LINE_LIST
-            marker.action = Marker.ADD
+        for human in best_humans:
+            if human is not None:
+                x_min, x_max, y_min, y_max, z_min, z_max, xyz = human
 
-            marker.scale.x = 0.1  # 선의 두께
+                # 테두리만 있는 박스
+                marker = Marker()
+                marker.header.frame_id = "velodyne"
+                marker.header.stamp = self.get_clock().now().to_msg()
+                marker.ns = "human_detection"
+                marker.id = id_counter
+                marker.type = Marker.LINE_LIST
+                marker.action = Marker.ADD
 
-            # 무작위 색상 설정
-            marker.color.a = 1.0  # Transparency
-            marker.color.r = random.random()
-            marker.color.g = random.random()
-            marker.color.b = random.random()
+                marker.scale.x = 0.05  # 선의 두께
 
-            # 박스를 구성하는 12개의 선
-            points = [
-                (x_min, y_min, z_min), (x_max, y_min, z_min),
-                (x_max, y_min, z_min), (x_max, y_max, z_min),
-                (x_max, y_max, z_min), (x_min, y_max, z_min),
-                (x_min, y_max, z_min), (x_min, y_min, z_min),
-                (x_min, y_min, z_max), (x_max, y_min, z_max),
-                (x_max, y_min, z_max), (x_max, y_max, z_max),
-                (x_max, y_max, z_max), (x_min, y_max, z_max),
-                (x_min, y_max, z_max), (x_min, y_min, z_max),
-                (x_min, y_min, z_min), (x_min, y_min, z_max),
-                (x_max, y_min, z_min), (x_max, y_min, z_max),
-                (x_max, y_max, z_min), (x_max, y_max, z_max),
-                (x_min, y_max, z_min), (x_min, y_max, z_max)
-            ]
+                # 무작위 색상 설정
+                marker.color.a = 1.0  # Transparency
+                marker.color.r = 1.0
+                marker.color.g = 0.8
+                marker.color.b = 0.0
 
-            for p in points:
-                point = [p[0], p[1], p[2], 1.0]
-                marker.points.append(Point(*point))
+                # 박스를 구성하는 12개의 선
+                points = [
+                    (x_min, y_min, z_min), (x_max, y_min, z_min),
+                    (x_max, y_min, z_min), (x_max, y_max, z_min),
+                    (x_max, y_max, z_min), (x_min, y_max, z_min),
+                    (x_min, y_max, z_min), (x_min, y_min, z_min),
+                    (x_min, y_min, z_max), (x_max, y_min, z_max),
+                    (x_max, y_min, z_max), (x_max, y_max, z_max),
+                    (x_max, y_max, z_max), (x_min, y_max, z_max),
+                    (x_min, y_max, z_max), (x_min, y_min, z_max),
+                    (x_min, y_min, z_min), (x_min, y_min, z_max),
+                    (x_max, y_min, z_min), (x_max, y_min, z_max),
+                    (x_max, y_max, z_min), (x_max, y_max, z_max),
+                    (x_min, y_max, z_min), (x_min, y_max, z_max)
+                ]
 
-            markers.markers.append(marker)
+                for p in points:
+                    point = Point()
+                    point.x, point.y, point.z = p[0], p[1], p[2]
+                    marker.points.append(point)
 
-            # Text Marker
-            center_x = (x_min + x_max) / 2
-            center_y = (y_min + y_max) / 2
-            center_z = (z_min + z_max) / 2
+                markers.markers.append(marker)
 
-            text_marker = Marker()
-            text_marker.header.frame_id = "velodyne"
-            text_marker.header.stamp = self.get_clock().now().to_msg()
-            text_marker.ns = "human_labels"
-            text_marker.id = id_counter + 1000  # 고유 ID 보장
-            text_marker.type = Marker.TEXT_VIEW_FACING
-            text_marker.action = Marker.ADD
-            text_marker.pose.position.x = center_x
-            text_marker.pose.position.y = center_y
-            text_marker.pose.position.z = center_z + 0.5  # 박스 위에 텍스트 표시
-            text_marker.pose.orientation.x = 0.0
-            text_marker.pose.orientation.y = 0.0
-            text_marker.pose.orientation.z = 0.0
-            text_marker.pose.orientation.w = 1.0
-            text_marker.scale.z = 0.3  # 텍스트 크기
-            text_marker.color.a = 1.0  # Transparency
-            text_marker.color.r = 1.0
-            text_marker.color.g = 1.0
-            text_marker.color.b = 1.0
-            text_marker.text = f"human{id_counter}\n({center_x:.2f}, {center_y:.2f}, {center_z:.2f})"
+                # Text Marker
+                center_x = (x_min + x_max) / 2
+                center_y = (y_min + y_max) / 2
+                center_z = (z_min + z_max) / 2
 
-            markers.markers.append(text_marker)
+                text_marker = Marker()
+                text_marker.header.frame_id = "velodyne"
+                text_marker.header.stamp = self.get_clock().now().to_msg()
+                text_marker.ns = "human_labels"
+                text_marker.id = id_counter + 1000  # 고유 ID 보장
+                text_marker.type = Marker.TEXT_VIEW_FACING
+                text_marker.action = Marker.ADD
+                text_marker.pose.position.x = center_x
+                text_marker.pose.position.y = center_y
+                text_marker.pose.position.z = center_z + 1.5  # 박스 위에 텍스트 표시
+                text_marker.pose.orientation.x = 0.0
+                text_marker.pose.orientation.y = 0.0
+                text_marker.pose.orientation.z = 0.0
+                text_marker.pose.orientation.w = 1.0
+                text_marker.scale.z = 0.25  # 텍스트 크기
+                text_marker.color.a = 1.0  # Transparency
+                text_marker.color.r = 1.0
+                text_marker.color.g = 1.0
+                text_marker.color.b = 1.0
+                text_marker.text = f"human {id_counter}\n({center_x:.2f}, {center_y:.2f}, {center_z:.2f})"
 
+                markers.markers.append(text_marker)
+
+                id_counter += 1
+
+        if markers.markers:
             self.publisher.publish(markers)
-            self.get_logger().info(f'Published 1 human marker with label.')
+            self.get_logger().info(f'Published {id_counter} human markers with labels.')
 
     def is_human(self, x_min, x_max, y_min, y_max, z_min, z_max):
         width = x_max - x_min
@@ -159,3 +171,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
