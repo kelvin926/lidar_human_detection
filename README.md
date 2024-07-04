@@ -1,4 +1,4 @@
-# human_detection_package
+# lidar_human_detection
 ## Environment
 ROS2 Humble
 Ubuntu 22.04
@@ -10,10 +10,8 @@ pip install scikit-learn
 
 colcon build
 
-ros2 launch human_detection_package velodyne_launch.py
+source install/setup.bash
+
+ros2 launch lidar_human_detection human_detection_launch.py
 
 rviz2 -> frame_id : velodyne, ADD Point cloud2 / marker_array
-
-## Important
-velodyne_launch.py - 23 lines
-'calibration': '/home/hyunseo/human_detection_package/config/VLP-16db.yaml', -> your absolute path

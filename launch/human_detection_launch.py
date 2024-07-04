@@ -20,13 +20,13 @@ def generate_launch_description():
             parameters=[{
                 'min_range': 0.4,
                 'max_range': 130.0,
-                'calibration': '/home/hyunseo/human_detection_package/config/VLP-16db.yaml',
+                'calibration': 'package://lidar_human_detection/config/VLP16db.yaml',
                 'model': 'VLP16'
             }],
             output='screen'
         ),
         Node(
-            package='human_detection_package',
+            package='lidar_human_detection',
             executable='human_detection_node.py',
             name='human_detection_node',
             output='screen'

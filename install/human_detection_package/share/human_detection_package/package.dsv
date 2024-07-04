@@ -1,8 +1,0 @@
-source;share/human_detection_package/hook/cmake_prefix_path.ps1
-source;share/human_detection_package/hook/cmake_prefix_path.dsv
-source;share/human_detection_package/hook/cmake_prefix_path.sh
-source;share/human_detection_package/local_setup.bash
-source;share/human_detection_package/local_setup.dsv
-source;share/human_detection_package/local_setup.ps1
-source;share/human_detection_package/local_setup.sh
-source;share/human_detection_package/local_setup.zsh

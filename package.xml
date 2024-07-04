@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>human_detection_package</name>
+  <name>lidar_human_detection</name>
   <version>0.0.1</version>
   <description>Human detection using Velodyne LiDAR and ROS2</description>
   <maintainer email="kelvin926@korea.ac.kr">Hyunseo</maintainer>

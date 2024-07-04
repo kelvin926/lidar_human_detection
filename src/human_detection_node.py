@@ -25,7 +25,7 @@ class HumanDetectionNode(Node):
 
         points = []
         for i, data in enumerate(pc2.read_points(msg, skip_nans=True)):
-            distance = np.sqrt(data[0]**2 + data[1]**2 + data[2]**2)
+            distance = np.sqrt(data[0]**2 + data[1]**2 + data[2]**2)  # 거리
             if distance <= 4.0:
                 points.append([data[0], data[1], data[2]])
 
@@ -56,38 +56,50 @@ class HumanDetectionNode(Node):
 
             # 사람의 크기와 형태에 맞는 클러스터 필터링
             if self.is_human(x_min, x_max, y_min, y_max, z_min, z_max):
-                center_x = (x_min + x_max) / 2
-                center_y = (y_min + y_max) / 2
-                center_z = (z_min + z_max) / 2
-
-                # Bounding Box Marker
+                # Bounding Box Marker (테두리만 있는 박스)
                 marker = Marker()
                 marker.header.frame_id = "velodyne"
                 marker.header.stamp = self.get_clock().now().to_msg()
                 marker.ns = "human_detection"
                 marker.id = id_counter
-                marker.type = Marker.CUBE
+                marker.type = Marker.LINE_LIST
                 marker.action = Marker.ADD
-                marker.pose.position.x = center_x
-                marker.pose.position.y = center_y
-                marker.pose.position.z = center_z
-                marker.pose.orientation.x = 0.0
-                marker.pose.orientation.y = 0.0
-                marker.pose.orientation.z = 0.0
-                marker.pose.orientation.w = 1.0
-                marker.scale.x = x_max - x_min
-                marker.scale.y = y_max - y_min
-                marker.scale.z = z_max - z_min
+
+                marker.scale.x = 0.1  # 선의 두께
 
                 # 무작위 색상 설정
-                marker.color.a = 0.5  # Transparency
+                marker.color.a = 1.0  # Transparency
                 marker.color.r = random.random()
                 marker.color.g = random.random()
                 marker.color.b = random.random()
 
+                # 박스를 구성하는 12개의 선 (8개의 점으로 구성)
+                points = [
+                    (x_min, y_min, z_min), (x_max, y_min, z_min),
+                    (x_max, y_min, z_min), (x_max, y_max, z_min),
+                    (x_max, y_max, z_min), (x_min, y_max, z_min),
+                    (x_min, y_max, z_min), (x_min, y_min, z_min),
+                    (x_min, y_min, z_max), (x_max, y_min, z_max),
+                    (x_max, y_min, z_max), (x_max, y_max, z_max),
+                    (x_max, y_max, z_max), (x_min, y_max, z_max),
+                    (x_min, y_max, z_max), (x_min, y_min, z_max),
+                    (x_min, y_min, z_min), (x_min, y_min, z_max),
+                    (x_max, y_min, z_min), (x_max, y_min, z_max),
+                    (x_max, y_max, z_min), (x_max, y_max, z_max),
+                    (x_min, y_max, z_min), (x_min, y_max, z_max)
+                ]
+
+                for p in points:
+                    point = [p[0], p[1], p[2], 1.0]
+                    marker.points.append(Point(*point))
+
                 markers.markers.append(marker)
 
                 # Text Marker
+                center_x = (x_min + x_max) / 2
+                center_y = (y_min + y_max) / 2
+                center_z = (z_min + z_max) / 2
+
                 text_marker = Marker()
                 text_marker.header.frame_id = "velodyne"
                 text_marker.header.stamp = self.get_clock().now().to_msg()
@@ -135,4 +147,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
