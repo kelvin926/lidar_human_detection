@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(human_detection_package)
+project(lidar_human_detection)
 
 # Add the following lines to set the policy CMP0074
 if(POLICY CMP0074)
