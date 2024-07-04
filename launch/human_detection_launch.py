@@ -20,7 +20,7 @@ def generate_launch_description():
             parameters=[{
                 'min_range': 0.4,
                 'max_range': 130.0,
-                'calibration': 'package://lidar_human_detection/config/VLP16db.yaml',
+                'calibration': 'config/VLP-16db.yaml',
                 'model': 'VLP16'
             }],
             output='screen'
